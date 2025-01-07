@@ -1,0 +1,9 @@
+int x = 0;
+int i=3;
+for (i = 1; i <= 5; i++) {
+	x = i;
+}
+print(i);
+/* 6 */
+print(x);
+/* 5 */
