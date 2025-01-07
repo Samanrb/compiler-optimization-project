@@ -1,6 +1,8 @@
-cd build
-cd src
-./compiler "$(cat ../../input.txt)" > compiler.ll
-llc --filetype=obj -o=compiler.o compiler.ll
-clang -o compilerbin compiler.o ../../rtCompiler.c
-./compilerbin
+#!/bin/bash
+
+# Create build directory if it doesn't exist
+mkdir -p build
+cd build/src
+
+# Compile the compiler
+./compiler "$(cat ../../input.txt)" || exit 1
