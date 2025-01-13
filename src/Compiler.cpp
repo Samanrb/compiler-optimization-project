@@ -7,7 +7,7 @@
 #include "CodeGen.h"
 #include "Parser.h"
 #include "Sema.h"
-#include "optimize.h"
+#include "optimizer.h"
 
 
 using namespace std;
@@ -65,15 +65,13 @@ int main(int argc, const char **argv)
 
 	Optimizer optimizer(contentRef);
 
-    optimizer.optimize();
+    std::string formattedCode = optimizer.optimize();
 	// std::string code = remove_code.pointer_to_string();
-	// std::cout << "\nOptimized code: \n" << code << "\n---------------\n" << std::endl;
-	// contentRef = code;
-
+	std::cout << "\n---------------\n🚀Optimized code: \n" << formattedCode << "\n---------------\n" << std::endl;
 
 
     // Create a lexer object and initialize it with the input expression.
-    Lexer Lex(contentRef);
+    Lexer Lex(formattedCode);
 
     // Create a parser object and initialize it with the lexer.
     Parser Parser(Lex);
