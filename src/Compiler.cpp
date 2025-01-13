@@ -66,8 +66,10 @@ int main(int argc, const char **argv)
 	Optimizer optimizer(contentRef);
 
     std::string formattedCode = optimizer.optimize();
-	// std::string code = remove_code.pointer_to_string();
-	std::cout << "\n---------------\n🚀Optimized code: \n" << formattedCode << "\n---------------\n" << std::endl;
+    llvm::errs() << "\n---------------\n";
+    llvm::errs() << "🚀Optimized code: \n";
+    llvm::errs() << formattedCode ;
+    llvm::errs() << "\n---------------\n";
 
 
     // Create a lexer object and initialize it with the input expression.
