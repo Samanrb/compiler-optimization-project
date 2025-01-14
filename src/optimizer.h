@@ -23,15 +23,15 @@ private:
     std::string code;
     const char *BufferPtr;
 
-    char peek(const char *&expr);
+    char top(const char *&expr);
     char get(const char *&expr);
     int number(const char *&expr);
     int variable(const char *&expr, int i);
     int factor(const char *&expr, int i);
     int term(const char *&expr, int i);
-    int cond(const char *&expr, int i);
+    int condition(const char *&expr, int i);
     int expression(const char *&expr, int i);
-    int const_pul(int j, llvm::StringRef variab);
+    int evaluateConstant(int j, llvm::StringRef variab);
 
 public:
     Optimizer(const llvm::StringRef &Buffer);

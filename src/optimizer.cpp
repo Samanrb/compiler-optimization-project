@@ -61,7 +61,7 @@ Optimizer::Optimizer(const llvm::StringRef &Buffer) {
         }
         llvm::StringRef Context(line_start, pointer - line_start);
         Lines.push_back(Context);
-        dead_lines.push_back(true);
+        deadLines.push_back(true);
         new_lines.push_back("");
         line_start = ++pointer;
     }
@@ -69,7 +69,7 @@ Optimizer::Optimizer(const llvm::StringRef &Buffer) {
 
 // Parser helper functions
 // Returns the current character without advancing position
-char Optimizer::peek(const char *&expr) {
+char Optimizer::top(const char *&expr) {
     return *expr;
 }
 
@@ -81,10 +81,10 @@ char Optimizer::get(const char *&expr) {
 // Parses and returns a numeric value from the expression
 int Optimizer::number(const char *&expr) {
     int result = get(expr) - '0';
-    while (peek(expr) >= '0' && peek(expr) <= '9') {
+    while (top(expr) >= '0' && top(expr) <= '9') {
         result = 10 * result + get(expr) - '0';
     }
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
     return result;
 }
@@ -93,43 +93,43 @@ int Optimizer::number(const char *&expr) {
 // Returns the computed value of the variable at line i
 int Optimizer::variable(const char *&expr, int i) {
     const char *temp = expr;
-    while (utils::isLetter(peek(expr)) || utils::isDigit(peek(expr))) {
+    while (utils::isLetter(top(expr)) || utils::isDigit(top(expr))) {
         get(expr);
     }
     llvm::StringRef name(temp, expr - temp);
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
     if (name == "true")
         return 1;
     else if (name == "false")
         return 0;
-    return const_pul(i, name);
+    return evaluateConstant(i, name);
 }
 
 // Recursive descent parser functions for expression evaluation
 // Handles factors (numbers, parentheses, negation, variables)
 int Optimizer::factor(const char *&expr, int i) {
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
-    if (peek(expr) >= '0' && peek(expr) <= '9')
+    if (top(expr) >= '0' && top(expr) <= '9')
         return number(expr);
-    else if (peek(expr) == '(') {
+    else if (top(expr) == '(') {
         get(expr);
-        while (peek(expr) == ' ')
+        while (top(expr) == ' ')
             get(expr);
         int result = expression(expr, i);
-        while (peek(expr) == ' ')
+        while (top(expr) == ' ')
             get(expr);
         get(expr);
-        while (peek(expr) == ' ')
+        while (top(expr) == ' ')
             get(expr);
         return result;
     }
-    else if (peek(expr) == '-') {
+    else if (top(expr) == '-') {
         get(expr);
         return -factor(expr, i);
     }
-    else if (utils::isLetter(peek(expr))) {
+    else if (utils::isLetter(top(expr))) {
         return variable(expr, i);
     }
     return 0;
@@ -137,12 +137,12 @@ int Optimizer::factor(const char *&expr, int i) {
 
 // Handles multiplication and division operations
 int Optimizer::term(const char *&expr, int i) {
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
     int result = factor(expr, i);
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
-    while (peek(expr) == '*' || peek(expr) == '/') {
+    while (top(expr) == '*' || top(expr) == '/') {
         if (get(expr) == '*')
             result *= factor(expr, i);
         else
@@ -152,13 +152,13 @@ int Optimizer::term(const char *&expr, int i) {
 }
 
 // Handles addition and subtraction operations
-int Optimizer::cond(const char *&expr, int i) {
-    while (peek(expr) == ' ')
+int Optimizer::condition(const char *&expr, int i) {
+    while (top(expr) == ' ')
         get(expr);
     int result = term(expr, i);
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
-    while (peek(expr) == '+' || peek(expr) == '-') {
+    while (top(expr) == '+' || top(expr) == '-') {
         if (get(expr) == '+')
             result += term(expr, i);
         else
@@ -169,38 +169,38 @@ int Optimizer::cond(const char *&expr, int i) {
 
 // Handles comparison operations (<, >, <=, >=, ==, !=)
 int Optimizer::expression(const char *&expr, int i) {
-    while (peek(expr) == ' ')
+    while (top(expr) == ' ')
         get(expr);
-    int result = cond(expr, i);
-    while (peek(expr) == ' ')
+    int result = condition(expr, i);
+    while (top(expr) == ' ')
         get(expr);
-    while (peek(expr) == '<' || peek(expr) == '>' || peek(expr) == '=' || peek(expr) == '!') {
-        if (peek(expr) == '<') {
+    while (top(expr) == '<' || top(expr) == '>' || top(expr) == '=' || top(expr) == '!') {
+        if (top(expr) == '<') {
             get(expr);
-            if (peek(expr) == '=') {
+            if (top(expr) == '=') {
                 get(expr);
-                result = result <= cond(expr, i);
+                result = result <= condition(expr, i);
             }
             else
-                result = result < cond(expr, i);
+                result = result < condition(expr, i);
         }
-        else if (peek(expr) == '>') {
+        else if (top(expr) == '>') {
             get(expr);
-            if (peek(expr) == '=') {
+            if (top(expr) == '=') {
                 get(expr);
-                result = result >= cond(expr, i);
+                result = result >= condition(expr, i);
             }
             else
-                result = result > cond(expr, i);
+                result = result > condition(expr, i);
         }
-        else if (peek(expr) == '=') {
+        else if (top(expr) == '=') {
             get(expr);
             get(expr);
-            result = result == cond(expr, i);
+            result = result == condition(expr, i);
         }
         else if (get(expr) == '!') {
             get(expr);
-            result = result != cond(expr, i);
+            result = result != condition(expr, i);
         }
     }
     return result;
@@ -208,7 +208,7 @@ int Optimizer::expression(const char *&expr, int i) {
 
 // Constant propagation: Evaluates and propagates constant values
 // Returns the computed constant value for the given variable
-int Optimizer::const_pul(int j, llvm::StringRef variab) {
+int Optimizer::evaluateConstant(int j, llvm::StringRef variab) {
     int i = j;
     bool flag = true;
     while (i > 0 && flag) {
@@ -239,7 +239,7 @@ int Optimizer::const_pul(int j, llvm::StringRef variab) {
             ++pointer;
         }
     }
-    dead_lines[i] = false;
+    deadLines[i] = false;
     llvm::StringRef corrent_line = Lines[i];
     const char *pointer = corrent_line.begin();
     const char *start_exp = corrent_line.begin();
@@ -258,7 +258,7 @@ int Optimizer::const_pul(int j, llvm::StringRef variab) {
 // Performs constant propagation and dead code elimination
 std::string Optimizer::optimize() {
     int i = Lines.size();
-    const_pul(i, "output");
+    evaluateConstant(i, "output");
     code = "";
     int len = Lines.size();
 
@@ -266,7 +266,7 @@ std::string Optimizer::optimize() {
 
     i = 0;
     while (i < len) {
-        if (!dead_lines[i]) {
+        if (!deadLines[i]) {
             if ((int)new_lines[i][0] == 10) {
                 new_lines[i] = new_lines[i].substr(1);
             }
