@@ -26,20 +26,20 @@ namespace charinfo {
     LLVM_READNONE inline bool isEqual(char c) {
         return c == '=';
     }
-}
 
-// Utility function to split a string by delimiter
-std::vector<std::string> split(std::string &s, const std::string &delimiter) {
-    std::vector<std::string> tokens;
-    size_t pos = 0;
-    std::string token;
-    while ((pos = s.find(delimiter)) != std::string::npos) {
-        token = s.substr(0, pos);
-        tokens.push_back(token);
-        s.erase(0, pos + delimiter.length());
+    // Utility function to split a string by delimiter
+    inline std::vector<std::string> split(std::string &s, const std::string &delimiter) {
+        std::vector<std::string> tokens;
+        size_t pos = 0;
+        std::string token;
+        while ((pos = s.find(delimiter)) != std::string::npos) {
+            token = s.substr(0, pos);
+            tokens.push_back(token);
+            s.erase(0, pos + delimiter.length());
+        }
+        tokens.push_back(s);
+        return tokens;
     }
-    tokens.push_back(s);
-    return tokens;
 }
 
 // Constructor: Initialize optimizer with input buffer
@@ -271,7 +271,7 @@ std::string Optimizer::optimize() {
                 new_lines[i] = new_lines[i].substr(1);
             }
             std::string temp_str = new_lines[i];
-            std::vector<std::string> temp = split(temp_str, " ");
+            std::vector<std::string> temp = charinfo::split(temp_str, " ");
 
             int j = 0;
             while (temp[j] != "int" && temp[j] != "=" && temp[j] != "bool") {
@@ -289,7 +289,7 @@ std::string Optimizer::optimize() {
                 int flag = 0;
                 for (int k = 0; k < initialized_variables.size(); k++) {
                     std::string temp_str = new_lines[i];
-                    std::vector<std::string> temp = split(temp_str, " ");
+                    std::vector<std::string> temp = charinfo::split(temp_str, " ");
                     int j = 0;
                     while (temp[j] != "=") {
                         if (initialized_variables[k] == temp[j]) flag = 1;
@@ -299,7 +299,7 @@ std::string Optimizer::optimize() {
                 if (flag == 0) {
                     new_lines[i] = "int " + new_lines[i];
                     std::string temp_str = new_lines[i];
-                    std::vector<std::string> temp = split(temp_str, " ");
+                    std::vector<std::string> temp = charinfo::split(temp_str, " ");
                     j = 0;
                     while (temp[j] == "int" || temp[j] == " ") {
                         j++;
