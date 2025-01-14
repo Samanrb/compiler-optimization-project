@@ -48,6 +48,7 @@ char Optimizer::get(const char *&expr) {
 // Returns: The parsed integer value
 int Optimizer::number(const char *&expr) {
     int result = get(expr) - '0';
+    //traverse the number and add the digits to the result
     while (top(expr) >= '0' && top(expr) <= '9') {
         result = 10 * result + get(expr) - '0';
     }
@@ -207,41 +208,45 @@ int Optimizer::expression(const char *&expr, int i) {
 //   j: Current line number
 //   variab: Variable name to evaluate
 // Returns: The computed constant value for the variable
-int Optimizer::evaluateConstant(int j, llvm::StringRef variab) {
+int Optimizer::evaluateConstant(int j, llvm::StringRef var_str) {
     int i = j;
     bool flag = true;
     while (i > 0 && flag) {
         i--;
-        llvm::StringRef corrent_line = Lines[i];
-        const char *pointer = corrent_line.begin();
+        llvm::StringRef current_line = Lines[i];
+        const char *pointer = current_line.begin();
 
         while (*pointer) {
+            //skip the whitespace
             while (*pointer && utils::isWhitespace(*pointer)) {
                 ++pointer;
             }
 
+            //check if it is a variable
             if (utils::isLetter(*pointer)) {
                 const char *end = pointer + 1;
+                // traverse the variable name
                 while (utils::isLetter(*end) || utils::isDigit(*end))
                     ++end;
+                //get the variable name
                 llvm::StringRef Context(pointer, end - pointer);
-
-                if (Context == variab) {
+                //check if it is the variable we are looking for
+                if (Context == var_str) {
                     flag = false;
                     break;
                 }
                 pointer = end;
-            }
-            else if (utils::isEqual(*pointer)) {
+            }else if (utils::isEqual(*pointer)) {
                 break;
             }
             ++pointer;
         }
     }
+    //if the variable is not found, then it is a dead code
     deadLines[i] = false;
-    llvm::StringRef corrent_line = Lines[i];
-    const char *pointer = corrent_line.begin();
-    const char *start_exp = corrent_line.begin();
+    llvm::StringRef current_line = Lines[i];
+    const char *pointer = current_line.begin();
+    const char *start_exp = current_line.begin();
     while (!utils::isEqual(*start_exp)) {
         ++start_exp;
     }
@@ -273,6 +278,7 @@ std::string Optimizer::optimize() {
     i = 0;
     while (i < len) {
         if (!deadLines[i]) {
+            //remove the first character if it is a newline that is empty
             if ((int)new_lines[i][0] == 10) {
                 new_lines[i] = new_lines[i].substr(1);
             }
@@ -280,6 +286,7 @@ std::string Optimizer::optimize() {
             std::vector<std::string> temp = utils::split(temp_str, " ");
 
             int j = 0;
+            // tr
             while (temp[j] != "int" && temp[j] != "=" && temp[j] != "bool") {
                 j++;
             }
@@ -289,20 +296,22 @@ std::string Optimizer::optimize() {
                 while (temp[j] == " ") {
                     j++;
                 }
+                //add the variable to the initialized_variables vector
                 initialized_variables.push_back(temp[j]);//bug fixed from j+1 to j
-            }
-            else {
+            }else {
                 int flag = 0;
                 for (int k = 0; k < initialized_variables.size(); k++) {
                     std::string temp_str = new_lines[i];
                     std::vector<std::string> temp = utils::split(temp_str, " ");
                     int j = 0;
+                    //search for old variables in the line
                     while (temp[j] != "=") {
                         if (initialized_variables[k] == temp[j]) flag = 1;
                         j++;
                     }
                 }
                 if (flag == 0) {
+                    //it is a new variable so add int to the line
                     new_lines[i] = "int " + new_lines[i];
                     std::string temp_str = new_lines[i];
                     std::vector<std::string> temp = utils::split(temp_str, " ");
@@ -314,6 +323,7 @@ std::string Optimizer::optimize() {
                 }
             }
             code.append(new_lines[i]);
+            //append a newline if it is not the last line
             if (i != new_lines.size() - 1) {
                 code.append("\n");
             }

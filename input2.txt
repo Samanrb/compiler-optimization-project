@@ -1,0 +1,7 @@
+int output = 10 + 3;
+int a = 31 + 2 * output + 1 - 1;
+int b = a + 6 / 2;
+bool x = a < b;
+a = b + 5;
+x = a < b;
+output = b;

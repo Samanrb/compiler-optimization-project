@@ -5,4 +5,4 @@ mkdir -p build
 cd build/src
 
 # Compile the compiler
-./compiler "$(cat ../../input.txt)" || exit 1
+./compiler "$(cat ../../input2.txt)" || exit 1
