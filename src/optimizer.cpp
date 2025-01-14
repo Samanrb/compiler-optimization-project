@@ -1,46 +1,6 @@
 #include "optimizer.h"
+#include "utils.h"
 #include <iostream>
-
-namespace utils {
-    // Check if character is whitespace (space, tab, form feed, vertical tab, carriage return, newline)
-    LLVM_READNONE inline bool isWhitespace(char c) {
-        return c == ' ' || c == '\t' || c == '\f' ||
-               c == '\v' || c == '\r' || c == '\n';
-    }
-
-    // Check if character is a digit (0-9)
-    LLVM_READNONE inline bool isDigit(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    // Check if character is a letter (a-z or A-Z)
-    LLVM_READNONE inline bool isLetter(char c) {
-        return (c >= 'a' && c <= 'z') ||
-               (c >= 'A' && c <= 'Z');
-    }
-
-    LLVM_READNONE inline bool isSemiColon(char c) {
-        return c == ';';
-    }
-
-    LLVM_READNONE inline bool isEqual(char c) {
-        return c == '=';
-    }
-
-    // Utility function to split a string by delimiter
-    inline std::vector<std::string> split(std::string &s, const std::string &delimiter) {
-        std::vector<std::string> tokens;
-        size_t pos = 0;
-        std::string token;
-        while ((pos = s.find(delimiter)) != std::string::npos) {
-            token = s.substr(0, pos);
-            tokens.push_back(token);
-            s.erase(0, pos + delimiter.length());
-        }
-        tokens.push_back(s);
-        return tokens;
-    }
-}
 
 // Constructor: Initialize optimizer with input buffer
 // - Splits the input code into lines and prepares for optimization
