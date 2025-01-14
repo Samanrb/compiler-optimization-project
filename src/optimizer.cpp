@@ -73,10 +73,12 @@ int Optimizer::variable(const char *&expr, int i) {
     llvm::StringRef name(temp, expr - temp);
     while (top(expr) == ' ')
         get(expr);
+    //check if it is a boolean literal
     if (name == "true")
         return 1;
     else if (name == "false")
         return 0;
+    //call the evaluateConstant function in recursive way
     return evaluateConstant(i, name);
 }
 
@@ -208,6 +210,7 @@ int Optimizer::expression(const char *&expr, int i) {
 //   j: Current line number
 //   variab: Variable name to evaluate
 // Returns: The computed constant value for the variable
+//TODO: the main idea of this function is to find the variable in the previous lines and evaluate it
 int Optimizer::evaluateConstant(int j, llvm::StringRef var_str) {
     int i = j;
     bool flag = true;
@@ -243,6 +246,7 @@ int Optimizer::evaluateConstant(int j, llvm::StringRef var_str) {
         }
     }
     //if the variable is not found, then it is a dead code
+    //TODO: this is for the dead code elimination and marking the line as dead/alive
     deadLines[i] = false;
     llvm::StringRef current_line = Lines[i];
     const char *pointer = current_line.begin();
@@ -286,11 +290,11 @@ std::string Optimizer::optimize() {
             std::vector<std::string> temp = utils::split(temp_str, " ");
 
             int j = 0;
-            // tr
             while (temp[j] != "int" && temp[j] != "=" && temp[j] != "bool") {
                 j++;
             }
 
+            //TODO this is for Redundant Assignments Elimination to ignore the variables that are already initialized
             if (temp[j] == "int" || temp[j] == "bool") {
                 j++;
                 while (temp[j] == " ") {
