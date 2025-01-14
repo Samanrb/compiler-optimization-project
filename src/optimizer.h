@@ -5,15 +5,15 @@
 #include <vector>
 #include "llvm/ADT/StringRef.h"
 
-namespace charinfo {
+namespace utils {
     LLVM_READNONE inline bool isWhitespace(char c);
     LLVM_READNONE inline bool isDigit(char c);
     LLVM_READNONE inline bool isLetter(char c);
     LLVM_READNONE inline bool isSemiColon(char c);
     LLVM_READNONE inline bool isEqual(char c);
+    std::vector<std::string> split(std::string &s, const std::string &delimiter);
 }
 
-std::vector<std::string> split(std::string &s, const std::string &delimiter);
 
 class Optimizer {
 private:

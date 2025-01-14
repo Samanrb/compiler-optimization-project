@@ -1,7 +1,7 @@
 #include "optimizer.h"
 #include <iostream>
 
-namespace charinfo {
+namespace utils {
     // Check if character is whitespace (space, tab, form feed, vertical tab, carriage return, newline)
     LLVM_READNONE inline bool isWhitespace(char c) {
         return c == ' ' || c == '\t' || c == '\f' ||
@@ -56,7 +56,7 @@ Optimizer::Optimizer(const llvm::StringRef &Buffer) {
     const char *pointer = BufferPtr;
     const char *line_start = BufferPtr;
     while (*pointer) {
-        while (!charinfo::isSemiColon(*pointer)) {
+        while (!utils::isSemiColon(*pointer)) {
             ++pointer;
         }
         llvm::StringRef Context(line_start, pointer - line_start);
@@ -93,7 +93,7 @@ int Optimizer::number(const char *&expr) {
 // Returns the computed value of the variable at line i
 int Optimizer::variable(const char *&expr, int i) {
     const char *temp = expr;
-    while (charinfo::isLetter(peek(expr)) || charinfo::isDigit(peek(expr))) {
+    while (utils::isLetter(peek(expr)) || utils::isDigit(peek(expr))) {
         get(expr);
     }
     llvm::StringRef name(temp, expr - temp);
@@ -129,7 +129,7 @@ int Optimizer::factor(const char *&expr, int i) {
         get(expr);
         return -factor(expr, i);
     }
-    else if (charinfo::isLetter(peek(expr))) {
+    else if (utils::isLetter(peek(expr))) {
         return variable(expr, i);
     }
     return 0;
@@ -217,13 +217,13 @@ int Optimizer::const_pul(int j, llvm::StringRef variab) {
         const char *pointer = corrent_line.begin();
 
         while (*pointer) {
-            while (*pointer && charinfo::isWhitespace(*pointer)) {
+            while (*pointer && utils::isWhitespace(*pointer)) {
                 ++pointer;
             }
 
-            if (charinfo::isLetter(*pointer)) {
+            if (utils::isLetter(*pointer)) {
                 const char *end = pointer + 1;
-                while (charinfo::isLetter(*end) || charinfo::isDigit(*end))
+                while (utils::isLetter(*end) || utils::isDigit(*end))
                     ++end;
                 llvm::StringRef Context(pointer, end - pointer);
 
@@ -233,7 +233,7 @@ int Optimizer::const_pul(int j, llvm::StringRef variab) {
                 }
                 pointer = end;
             }
-            else if (charinfo::isEqual(*pointer)) {
+            else if (utils::isEqual(*pointer)) {
                 break;
             }
             ++pointer;
@@ -243,7 +243,7 @@ int Optimizer::const_pul(int j, llvm::StringRef variab) {
     llvm::StringRef corrent_line = Lines[i];
     const char *pointer = corrent_line.begin();
     const char *start_exp = corrent_line.begin();
-    while (!charinfo::isEqual(*start_exp)) {
+    while (!utils::isEqual(*start_exp)) {
         ++start_exp;
     }
     start_exp++;
@@ -271,7 +271,7 @@ std::string Optimizer::optimize() {
                 new_lines[i] = new_lines[i].substr(1);
             }
             std::string temp_str = new_lines[i];
-            std::vector<std::string> temp = charinfo::split(temp_str, " ");
+            std::vector<std::string> temp = utils::split(temp_str, " ");
 
             int j = 0;
             while (temp[j] != "int" && temp[j] != "=" && temp[j] != "bool") {
@@ -289,7 +289,7 @@ std::string Optimizer::optimize() {
                 int flag = 0;
                 for (int k = 0; k < initialized_variables.size(); k++) {
                     std::string temp_str = new_lines[i];
-                    std::vector<std::string> temp = charinfo::split(temp_str, " ");
+                    std::vector<std::string> temp = utils::split(temp_str, " ");
                     int j = 0;
                     while (temp[j] != "=") {
                         if (initialized_variables[k] == temp[j]) flag = 1;
@@ -299,7 +299,7 @@ std::string Optimizer::optimize() {
                 if (flag == 0) {
                     new_lines[i] = "int " + new_lines[i];
                     std::string temp_str = new_lines[i];
-                    std::vector<std::string> temp = charinfo::split(temp_str, " ");
+                    std::vector<std::string> temp = utils::split(temp_str, " ");
                     j = 0;
                     while (temp[j] == "int" || temp[j] == " ") {
                         j++;
