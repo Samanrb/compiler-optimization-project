@@ -289,7 +289,7 @@ std::string Optimizer::optimize() {
                 while (temp[j] == " ") {
                     j++;
                 }
-                initialized_variables.push_back(temp[j + 1]);
+                initialized_variables.push_back(temp[j]);//bug fixed from j+1 to j
             }
             else {
                 int flag = 0;
