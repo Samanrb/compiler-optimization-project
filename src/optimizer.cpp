@@ -43,7 +43,9 @@ namespace utils {
 }
 
 // Constructor: Initialize optimizer with input buffer
-// Splits the input code into lines and prepares for optimization
+// - Splits the input code into lines and prepares for optimization
+// - Stores each line until semicolon in Lines vector
+// - Initializes tracking vectors for dead code elimination and optimized lines
 Optimizer::Optimizer(const llvm::StringRef &Buffer) {
     BufferPtr = Buffer.begin();
     const char *end = BufferPtr + 1;
@@ -68,17 +70,22 @@ Optimizer::Optimizer(const llvm::StringRef &Buffer) {
 }
 
 // Parser helper functions
-// Returns the current character without advancing position
+// top(): Peek at current character without advancing position
+// Useful for lookahead during parsing
 char Optimizer::top(const char *&expr) {
     return *expr;
 }
 
-// Returns current character and advances position
+// get(): Read and advance to next character
+// Advances the pointer position after reading
 char Optimizer::get(const char *&expr) {
     return *expr++;
 }
 
-// Parses and returns a numeric value from the expression
+// Parse numeric values from the expression
+// - Handles multi-digit numbers
+// - Skips trailing whitespace
+// Returns: The parsed integer value
 int Optimizer::number(const char *&expr) {
     int result = get(expr) - '0';
     while (top(expr) >= '0' && top(expr) <= '9') {
@@ -89,8 +96,14 @@ int Optimizer::number(const char *&expr) {
     return result;
 }
 
-// Handles variable references and constant propagation
-// Returns the computed value of the variable at line i
+// Handle variable references and constant propagation
+// - Processes variable names (letters and digits)
+// - Handles boolean literals (true/false)
+// - Performs constant propagation for variables
+// Parameters:
+//   expr: Current position in expression
+//   i: Current line number being processed
+// Returns: The evaluated value of the variable
 int Optimizer::variable(const char *&expr, int i) {
     const char *temp = expr;
     while (utils::isLetter(top(expr)) || utils::isDigit(top(expr))) {
@@ -106,8 +119,13 @@ int Optimizer::variable(const char *&expr, int i) {
     return evaluateConstant(i, name);
 }
 
-// Recursive descent parser functions for expression evaluation
-// Handles factors (numbers, parentheses, negation, variables)
+// Parse factors in the expression grammar
+// Handles:
+// - Numbers
+// - Parenthesized expressions
+// - Unary negation
+// - Variables
+// Returns: The evaluated value of the factor
 int Optimizer::factor(const char *&expr, int i) {
     while (top(expr) == ' ')
         get(expr);
@@ -135,7 +153,10 @@ int Optimizer::factor(const char *&expr, int i) {
     return 0;
 }
 
-// Handles multiplication and division operations
+// Parse and evaluate multiplication/division terms
+// - Processes sequences of * and / operations
+// - Maintains operator precedence
+// Returns: The computed value of the term
 int Optimizer::term(const char *&expr, int i) {
     while (top(expr) == ' ')
         get(expr);
@@ -151,7 +172,10 @@ int Optimizer::term(const char *&expr, int i) {
     return result;
 }
 
-// Handles addition and subtraction operations
+// Parse and evaluate addition/subtraction expressions
+// - Processes sequences of + and - operations
+// - Maintains operator precedence
+// Returns: The computed value of the arithmetic expression
 int Optimizer::condition(const char *&expr, int i) {
     while (top(expr) == ' ')
         get(expr);
@@ -167,7 +191,15 @@ int Optimizer::condition(const char *&expr, int i) {
     return result;
 }
 
-// Handles comparison operations (<, >, <=, >=, ==, !=)
+// Parse and evaluate comparison expressions
+// Handles all comparison operators:
+// - < (less than)
+// - > (greater than)
+// - <= (less than or equal)
+// - >= (greater than or equal)
+// - == (equality)
+// - != (inequality)
+// Returns: 1 if condition is true, 0 if false
 int Optimizer::expression(const char *&expr, int i) {
     while (top(expr) == ' ')
         get(expr);
@@ -206,8 +238,15 @@ int Optimizer::expression(const char *&expr, int i) {
     return result;
 }
 
-// Constant propagation: Evaluates and propagates constant values
-// Returns the computed constant value for the given variable
+// Constant Propagation Algorithm
+// - Traces variable definitions backwards from current line
+// - Evaluates constant expressions
+// - Updates dead code tracking
+// - Generates optimized line replacements
+// Parameters:
+//   j: Current line number
+//   variab: Variable name to evaluate
+// Returns: The computed constant value for the variable
 int Optimizer::evaluateConstant(int j, llvm::StringRef variab) {
     int i = j;
     bool flag = true;
@@ -255,7 +294,14 @@ int Optimizer::evaluateConstant(int j, llvm::StringRef variab) {
 }
 
 // Main optimization function
-// Performs constant propagation and dead code elimination
+// Performs multiple optimization passes:
+// 1. Constant propagation starting from output variable
+// 2. Dead code elimination for unused statements
+// 3. Variable declaration management:
+//    - Tracks initialized variables
+//    - Adds missing declarations
+//    - Maintains proper scoping
+// Returns: The optimized code as a single string
 std::string Optimizer::optimize() {
     int i = Lines.size();
     evaluateConstant(i, "output");
