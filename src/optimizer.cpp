@@ -2,15 +2,18 @@
 #include <iostream>
 
 namespace charinfo {
+    // Check if character is whitespace (space, tab, form feed, vertical tab, carriage return, newline)
     LLVM_READNONE inline bool isWhitespace(char c) {
         return c == ' ' || c == '\t' || c == '\f' ||
                c == '\v' || c == '\r' || c == '\n';
     }
 
+    // Check if character is a digit (0-9)
     LLVM_READNONE inline bool isDigit(char c) {
         return c >= '0' && c <= '9';
     }
 
+    // Check if character is a letter (a-z or A-Z)
     LLVM_READNONE inline bool isLetter(char c) {
         return (c >= 'a' && c <= 'z') ||
                (c >= 'A' && c <= 'Z');
@@ -25,6 +28,7 @@ namespace charinfo {
     }
 }
 
+// Utility function to split a string by delimiter
 std::vector<std::string> split(std::string &s, const std::string &delimiter) {
     std::vector<std::string> tokens;
     size_t pos = 0;
@@ -38,6 +42,8 @@ std::vector<std::string> split(std::string &s, const std::string &delimiter) {
     return tokens;
 }
 
+// Constructor: Initialize optimizer with input buffer
+// Splits the input code into lines and prepares for optimization
 Optimizer::Optimizer(const llvm::StringRef &Buffer) {
     BufferPtr = Buffer.begin();
     const char *end = BufferPtr + 1;
@@ -61,14 +67,18 @@ Optimizer::Optimizer(const llvm::StringRef &Buffer) {
     }
 }
 
+// Parser helper functions
+// Returns the current character without advancing position
 char Optimizer::peek(const char *&expr) {
     return *expr;
 }
 
+// Returns current character and advances position
 char Optimizer::get(const char *&expr) {
     return *expr++;
 }
 
+// Parses and returns a numeric value from the expression
 int Optimizer::number(const char *&expr) {
     int result = get(expr) - '0';
     while (peek(expr) >= '0' && peek(expr) <= '9') {
@@ -79,6 +89,8 @@ int Optimizer::number(const char *&expr) {
     return result;
 }
 
+// Handles variable references and constant propagation
+// Returns the computed value of the variable at line i
 int Optimizer::variable(const char *&expr, int i) {
     const char *temp = expr;
     while (charinfo::isLetter(peek(expr)) || charinfo::isDigit(peek(expr))) {
@@ -94,6 +106,8 @@ int Optimizer::variable(const char *&expr, int i) {
     return const_pul(i, name);
 }
 
+// Recursive descent parser functions for expression evaluation
+// Handles factors (numbers, parentheses, negation, variables)
 int Optimizer::factor(const char *&expr, int i) {
     while (peek(expr) == ' ')
         get(expr);
@@ -121,6 +135,7 @@ int Optimizer::factor(const char *&expr, int i) {
     return 0;
 }
 
+// Handles multiplication and division operations
 int Optimizer::term(const char *&expr, int i) {
     while (peek(expr) == ' ')
         get(expr);
@@ -136,6 +151,7 @@ int Optimizer::term(const char *&expr, int i) {
     return result;
 }
 
+// Handles addition and subtraction operations
 int Optimizer::cond(const char *&expr, int i) {
     while (peek(expr) == ' ')
         get(expr);
@@ -151,6 +167,7 @@ int Optimizer::cond(const char *&expr, int i) {
     return result;
 }
 
+// Handles comparison operations (<, >, <=, >=, ==, !=)
 int Optimizer::expression(const char *&expr, int i) {
     while (peek(expr) == ' ')
         get(expr);
@@ -189,6 +206,8 @@ int Optimizer::expression(const char *&expr, int i) {
     return result;
 }
 
+// Constant propagation: Evaluates and propagates constant values
+// Returns the computed constant value for the given variable
 int Optimizer::const_pul(int j, llvm::StringRef variab) {
     int i = j;
     bool flag = true;
@@ -235,6 +254,8 @@ int Optimizer::const_pul(int j, llvm::StringRef variab) {
     return value;
 }
 
+// Main optimization function
+// Performs constant propagation and dead code elimination
 std::string Optimizer::optimize() {
     int i = Lines.size();
     const_pul(i, "output");
