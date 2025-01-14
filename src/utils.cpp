@@ -23,6 +23,10 @@ namespace utils {
         return c == '=';
     }
 
+    
+    // Splits a string using a delimiter
+    // delimiter is the string to split on
+    // example: split("hello world", " ") -> ["hello", "world"]
     std::vector<std::string> split(std::string &s, const std::string &delimiter) {
         std::vector<std::string> tokens;
         size_t pos = 0;
