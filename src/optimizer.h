@@ -19,7 +19,7 @@ class Optimizer {
 private:
     std::vector<llvm::StringRef> Lines;
     std::vector<std::string> new_lines;
-    std::vector<bool> dead_lines;
+    std::vector<bool> deadLines;
     std::string code;
     const char *BufferPtr;
 
